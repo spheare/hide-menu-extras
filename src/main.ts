@@ -19,7 +19,7 @@ interface IElectronTrayIcon {
 }
 
 class HideMenuExtraApp {
-	protected AUTOHIDE_TIMEOUT: number = 15000;
+	protected AUTOHIDE_TIMEOUT: number = 15;
 	protected get SPACER_URL(): string {
 		return this.m_hPath.join(__dirname, 'spacer.png');
 	}
@@ -49,6 +49,8 @@ class HideMenuExtraApp {
 	protected m_hTimer: NodeJS.Timer = null;
 	protected m_bShowAllIcons: boolean = true;
 
+	protected m_nSecondsLeftBeforeHide: number = 0;
+
 	private constructor() {}
 
 	public static get Instance(): HideMenuExtraApp {
@@ -68,7 +70,7 @@ class HideMenuExtraApp {
 		this.createMenuIcon();
 		this.createSpacerIcon();
 		this.showIconMode(true);
-
+		this.enableCountdownTimer();
 		setInterval(this.verifyIconsAccessible.bind(this), 2000);
 	}
 
@@ -99,11 +101,16 @@ class HideMenuExtraApp {
 	}
 
 	protected OnClickMenuIcon(): void {
+		console.log('menuclick');
 		this.m_bShowAllIcons = this.showIconMode(!this.m_bShowAllIcons);
-		if (this.m_bShowAllIcons) this.resetAutoHideTimer();
+		if (this.m_bShowAllIcons) this.enableCountdownTimer();
+		else this.cancelCountdownTimer();
 	}
 	protected OnClickSpacerIcon(): void {
-		this.m_bShowAllIcons = this.showIconMode(!this.m_bShowAllIcons);
+		// toggle between canceling the autohide timer and hiding the icons
+		if (this.m_hTimer) {
+			this.cancelCountdownTimer();
+		} else this.m_bShowAllIcons = this.showIconMode(!this.m_bShowAllIcons);
 	}
 	protected OnRightClickMenuIcon(): void {
 		this.m_hApp.quit();
@@ -115,15 +122,52 @@ class HideMenuExtraApp {
 		this.m_traySpacer.setImage(bShowAll ? this.SPACER_MOVE_URL : this.SPACER_URL);
 		this.m_trayMenu.setImage(bShowAll ? this.MENU_COLLAPSE_URL : this.MENU_EXPAND_URL);
 		this.m_trayMenu.setPressedImage(bShowAll ? this.MENU_COLLAPSE_PRESSED_URL : this.MENU_EXPAND_PRESSED_URL);
+
+		this.m_trayMenu.setTitle('');
 		return bShowAll;
 	}
 
-	protected resetAutoHideTimer(): void {
-		if (this.m_hTimer) clearTimeout(this.m_hTimer);
-		this.m_hTimer = setTimeout(() => {
-			this.m_hTimer = null;
-			this.m_bShowAllIcons = this.showIconMode(false);
-		}, this.AUTOHIDE_TIMEOUT);
+	protected cancelCountdownTimer(): void {
+		if (!this.m_hTimer) return;
+
+		clearInterval(this.m_hTimer);
+		this.m_hTimer = null;
+		this.m_trayMenu.setTitle('');
+	}
+	protected enableCountdownTimer(): void {
+		// let IMAGES = [];
+		// for (let x = 0; x < 10; ++x) {
+		// 	IMAGES.push(
+		// 		new Array(10-x).join('.').split('').map(() => '.').join('')
+		// 	);
+		// }
+
+		const updateTrayIcon = secondsLeft => {
+			// const index = Math.max(
+			// 	0,
+			// 	IMAGES.length - 1 - Math.round((IMAGES.length - 1) * (secondsLeft / this.AUTOHIDE_TIMEOUT))
+			// );
+			// const currentImage = IMAGES[index];
+			// console.log('tick', secondsLeft, currentImage, index);
+			// this.m_trayMenu.setTitle(currentImage);
+			this.m_trayMenu.setTitle(''+secondsLeft);
+		};
+
+		console.log('resetAutoHide');
+		this.cancelCountdownTimer();
+		console.log('...');
+		this.m_nSecondsLeftBeforeHide = this.AUTOHIDE_TIMEOUT;
+		console.log('...');
+		updateTrayIcon(this.m_nSecondsLeftBeforeHide);
+		console.log('...');
+		this.m_hTimer = setInterval(() => {
+			updateTrayIcon(--this.m_nSecondsLeftBeforeHide);
+			console.log('tick');
+			if (this.m_nSecondsLeftBeforeHide <= 0) {
+				this.cancelCountdownTimer();
+				this.m_bShowAllIcons = this.showIconMode(false);
+			}
+		}, 1000);
 	}
 
 	protected verifyIconsAccessible(): void {
