@@ -15,7 +15,8 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+			"name": "Launch Program",
+			"runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
             "program": "${workspaceFolder}/main.js",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
