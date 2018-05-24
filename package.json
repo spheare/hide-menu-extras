@@ -7,7 +7,7 @@
 		"build": "tsc src/*.ts  --alwaysStrict --noUnusedLocals  --noUnusedParameters -t 'ES2016' --outFile main.js",
 		"start": "npm run build && npm run create-dist && cd dist/ && electron main.js",
 		"create-dist" : "rm -rf dist/ && mkdir -p dist && cp main.js package.json dist/ && cp -R images/ dist/",
-		"package": "npm run build && npm run create-dist && electron-packager dist/ --osx-sign --app-bundle-id be.badpotato.hidemenuextas --icon icons.icns"
+		"package": "npm run build && npm run create-dist && electron-packager dist/ --osx-sign --app-bundle-id be.badpotato.hidemenuextas --overwrite --icon icons.icns"
 	},
 	"keywords": [],
 	"author": "Kevin Vaesen",
