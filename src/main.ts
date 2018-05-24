@@ -38,6 +38,9 @@ class HideMenuExtraApp {
 	protected get MENU_COLLAPSE_PRESSED_URL(): string {
 		return this.m_hPath.join(__dirname, 'collapsePushedTemplate.png');
 	}
+	protected get MENU_COLLAPSE_COUNT_URLS(): string[] {
+		return [ 100, 75, 50, 25 ].map(x => this.m_hPath.join(__dirname, `collapse${x}Template.png`));
+	}
 	protected static m_hInstance: HideMenuExtraApp;
 
 	protected m_hApp: any;
@@ -85,13 +88,6 @@ class HideMenuExtraApp {
 		this.m_trayMenu.setHighlightMode('never');
 		this.m_trayMenu.on('click', this.OnClickMenuIcon.bind(this));
 		this.m_trayMenu.on('right-click', this.OnRightClickMenuIcon.bind(this));
-
-		// const contextMenu = Menu.buildFromTemplate([
-		// 	{ label: 'Move items', click: () => toggleShowIconMode() },
-		// 	{ type: 'separator' },
-		// 	{ role: 'quit' }
-		// ]);
-		// this.m_trayMenu.setContextMenu(contextMenu);
 	}
 
 	protected checkBounds(): boolean {
@@ -101,7 +97,6 @@ class HideMenuExtraApp {
 	}
 
 	protected OnClickMenuIcon(): void {
-		console.log('menuclick');
 		this.m_bShowAllIcons = this.showIconMode(!this.m_bShowAllIcons);
 		if (this.m_bShowAllIcons) this.enableCountdownTimer();
 		else this.cancelCountdownTimer();
@@ -110,7 +105,9 @@ class HideMenuExtraApp {
 		// toggle between canceling the autohide timer and hiding the icons
 		if (this.m_hTimer) {
 			this.cancelCountdownTimer();
-		} else this.m_bShowAllIcons = this.showIconMode(!this.m_bShowAllIcons);
+			this.showIconMode(this.m_bShowAllIcons); // toggle current icon again (ie: clear count down image)
+		} else
+			this.m_bShowAllIcons = this.showIconMode(!this.m_bShowAllIcons);
 	}
 	protected OnRightClickMenuIcon(): void {
 		this.m_hApp.quit();
@@ -123,7 +120,6 @@ class HideMenuExtraApp {
 		this.m_trayMenu.setImage(bShowAll ? this.MENU_COLLAPSE_URL : this.MENU_EXPAND_URL);
 		this.m_trayMenu.setPressedImage(bShowAll ? this.MENU_COLLAPSE_PRESSED_URL : this.MENU_EXPAND_PRESSED_URL);
 
-		this.m_trayMenu.setTitle('');
 		return bShowAll;
 	}
 
@@ -132,37 +128,23 @@ class HideMenuExtraApp {
 
 		clearInterval(this.m_hTimer);
 		this.m_hTimer = null;
-		this.m_trayMenu.setTitle('');
 	}
 	protected enableCountdownTimer(): void {
-		// let IMAGES = [];
-		// for (let x = 0; x < 10; ++x) {
-		// 	IMAGES.push(
-		// 		new Array(10-x).join('.').split('').map(() => '.').join('')
-		// 	);
-		// }
-
+		const IMAGES = this.MENU_COLLAPSE_COUNT_URLS;
 		const updateTrayIcon = secondsLeft => {
-			// const index = Math.max(
-			// 	0,
-			// 	IMAGES.length - 1 - Math.round((IMAGES.length - 1) * (secondsLeft / this.AUTOHIDE_TIMEOUT))
-			// );
-			// const currentImage = IMAGES[index];
-			// console.log('tick', secondsLeft, currentImage, index);
-			// this.m_trayMenu.setTitle(currentImage);
-			this.m_trayMenu.setTitle(''+secondsLeft);
+			const index = Math.max(
+				0,
+				IMAGES.length - 1 - Math.round((IMAGES.length - 1) * (secondsLeft / this.AUTOHIDE_TIMEOUT))
+			);
+			console.log(index, IMAGES,IMAGES[index]);
+			this.m_trayMenu.setImage(IMAGES[index]);
 		};
 
-		console.log('resetAutoHide');
 		this.cancelCountdownTimer();
-		console.log('...');
 		this.m_nSecondsLeftBeforeHide = this.AUTOHIDE_TIMEOUT;
-		console.log('...');
 		updateTrayIcon(this.m_nSecondsLeftBeforeHide);
-		console.log('...');
 		this.m_hTimer = setInterval(() => {
 			updateTrayIcon(--this.m_nSecondsLeftBeforeHide);
-			console.log('tick');
 			if (this.m_nSecondsLeftBeforeHide <= 0) {
 				this.cancelCountdownTimer();
 				this.m_bShowAllIcons = this.showIconMode(false);
