@@ -100,7 +100,6 @@ class HideMenuExtraApp {
         const IMAGES = this.MENU_COLLAPSE_COUNT_URLS;
         const updateTrayIcon = secondsLeft => {
             const index = Math.max(0, IMAGES.length - 1 - Math.round((IMAGES.length - 1) * (secondsLeft / this.AUTOHIDE_TIMEOUT)));
-            console.log(index, IMAGES, IMAGES[index]);
             this.m_trayMenu.setImage(IMAGES[index]);
         };
         this.cancelCountdownTimer();

@@ -136,7 +136,6 @@ class HideMenuExtraApp {
 				0,
 				IMAGES.length - 1 - Math.round((IMAGES.length - 1) * (secondsLeft / this.AUTOHIDE_TIMEOUT))
 			);
-			console.log(index, IMAGES,IMAGES[index]);
 			this.m_trayMenu.setImage(IMAGES[index]);
 		};
 
