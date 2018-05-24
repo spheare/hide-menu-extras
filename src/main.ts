@@ -101,7 +101,6 @@ class HideMenuExtraApp {
 	}
 
 	protected OnClickMenuIcon(): void {
-		console.log('menuclick');
 		this.m_bShowAllIcons = this.showIconMode(!this.m_bShowAllIcons);
 		if (this.m_bShowAllIcons) this.enableCountdownTimer();
 		else this.cancelCountdownTimer();
@@ -153,16 +152,11 @@ class HideMenuExtraApp {
 			this.m_trayMenu.setTitle(''+secondsLeft);
 		};
 
-		console.log('resetAutoHide');
 		this.cancelCountdownTimer();
-		console.log('...');
 		this.m_nSecondsLeftBeforeHide = this.AUTOHIDE_TIMEOUT;
-		console.log('...');
 		updateTrayIcon(this.m_nSecondsLeftBeforeHide);
-		console.log('...');
 		this.m_hTimer = setInterval(() => {
 			updateTrayIcon(--this.m_nSecondsLeftBeforeHide);
-			console.log('tick');
 			if (this.m_nSecondsLeftBeforeHide <= 0) {
 				this.cancelCountdownTimer();
 				this.m_bShowAllIcons = this.showIconMode(false);

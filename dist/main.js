@@ -2,7 +2,7 @@
 const { app, Menu, Tray, dialog } = require('electron');
 class HideMenuExtraApp {
     constructor() {
-        this.AUTOHIDE_TIMEOUT = 10;
+        this.AUTOHIDE_TIMEOUT = 15;
         this.m_traySpacer = null;
         this.m_trayMenu = null;
         this.m_hTimer = null;
@@ -67,7 +67,6 @@ class HideMenuExtraApp {
         return rcMenu.x >= rcSpacer.x;
     }
     OnClickMenuIcon() {
-        console.log('menuclick');
         this.m_bShowAllIcons = this.showIconMode(!this.m_bShowAllIcons);
         if (this.m_bShowAllIcons)
             this.enableCountdownTimer();
@@ -118,16 +117,11 @@ class HideMenuExtraApp {
             // this.m_trayMenu.setTitle(currentImage);
             this.m_trayMenu.setTitle('' + secondsLeft);
         };
-        console.log('resetAutoHide');
         this.cancelCountdownTimer();
-        console.log('...');
         this.m_nSecondsLeftBeforeHide = this.AUTOHIDE_TIMEOUT;
-        console.log('...');
         updateTrayIcon(this.m_nSecondsLeftBeforeHide);
-        console.log('...');
         this.m_hTimer = setInterval(() => {
             updateTrayIcon(--this.m_nSecondsLeftBeforeHide);
-            console.log('tick');
             if (this.m_nSecondsLeftBeforeHide <= 0) {
                 this.cancelCountdownTimer();
                 this.m_bShowAllIcons = this.showIconMode(false);
