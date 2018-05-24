@@ -15,6 +15,7 @@ interface IElectronTrayIcon {
 	setTitle(tip: string): void;
 	setImage(url: string): void;
 	setPressedImage(url: string): void;
+	popUpContextMenu(menu: any): void;
 	getBounds(): IBounds;
 }
 
@@ -51,6 +52,7 @@ class HideMenuExtraApp {
 	protected m_trayMenu: IElectronTrayIcon = null;
 	protected m_hTimer: NodeJS.Timer = null;
 	protected m_bShowAllIcons: boolean = true;
+	protected m_hMenu = null;
 
 	protected m_nSecondsLeftBeforeHide: number = 0;
 
@@ -71,6 +73,7 @@ class HideMenuExtraApp {
 
 	protected OnAppReady(): void {
 		this.createMenuIcon();
+		this.createPopupMenu();
 		this.createSpacerIcon();
 		this.showIconMode(true);
 		this.enableCountdownTimer();
@@ -90,6 +93,27 @@ class HideMenuExtraApp {
 		this.m_trayMenu.on('right-click', this.OnRightClickMenuIcon.bind(this));
 	}
 
+	protected createPopupMenu() {
+		// todo: support auto-launch
+		// https://www.npmjs.com/package/auto-launch
+
+		this.m_hMenu = Menu.buildFromTemplate([
+			{
+				label: 'Launch on startup',
+				click: () => {
+					this.m_hDialog.showMessageBox({
+						type: 'error',
+						title: 'Not yet supported',
+						message: 'sorry, this is not yet supported.'
+					});
+					this.m_trayMenu.setHighlightMode('never');
+				}
+			},
+			{ type: 'separator' },
+			{ role: 'quit' }
+		]);
+	}
+
 	protected checkBounds(): boolean {
 		const rcMenu: IBounds = this.m_trayMenu.getBounds(),
 			rcSpacer: IBounds = this.m_traySpacer.getBounds();
@@ -101,16 +125,20 @@ class HideMenuExtraApp {
 		if (this.m_bShowAllIcons) this.enableCountdownTimer();
 		else this.cancelCountdownTimer();
 	}
+
 	protected OnClickSpacerIcon(): void {
 		// toggle between canceling the autohide timer and hiding the icons
 		if (this.m_hTimer) {
 			this.cancelCountdownTimer();
 			this.showIconMode(this.m_bShowAllIcons); // toggle current icon again (ie: clear count down image)
-		} else
-			this.m_bShowAllIcons = this.showIconMode(!this.m_bShowAllIcons);
+		} else this.m_bShowAllIcons = this.showIconMode(!this.m_bShowAllIcons);
 	}
+
 	protected OnRightClickMenuIcon(): void {
-		this.m_hApp.quit();
+		this.cancelCountdownTimer();
+		this.showIconMode(this.m_bShowAllIcons);
+		this.m_trayMenu.setHighlightMode('always');
+		this.m_trayMenu.popUpContextMenu(this.m_hMenu);
 	}
 
 	protected showIconMode(bShowAll): boolean {
@@ -119,6 +147,8 @@ class HideMenuExtraApp {
 		this.m_traySpacer.setImage(bShowAll ? this.SPACER_MOVE_URL : this.SPACER_URL);
 		this.m_trayMenu.setImage(bShowAll ? this.MENU_COLLAPSE_URL : this.MENU_EXPAND_URL);
 		this.m_trayMenu.setPressedImage(bShowAll ? this.MENU_COLLAPSE_PRESSED_URL : this.MENU_EXPAND_PRESSED_URL);
+
+		this.m_trayMenu.setHighlightMode('never'); // reset in case we have shown a menu
 
 		return bShowAll;
 	}
@@ -129,6 +159,7 @@ class HideMenuExtraApp {
 		clearInterval(this.m_hTimer);
 		this.m_hTimer = null;
 	}
+
 	protected enableCountdownTimer(): void {
 		const IMAGES = this.MENU_COLLAPSE_COUNT_URLS;
 		const updateTrayIcon = secondsLeft => {
